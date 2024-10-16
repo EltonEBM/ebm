@@ -1,61 +1,42 @@
-import paramiko
 import os
+import paramiko
+import subprocess
 
-def ssh_execute_command(host, username, key_file, command):
+# Variables for SSH and database
+first_ec2_ip = os.getenv('FIRST_EC2_IP')
+second_ec2_ip = os.getenv('SECOND_EC2_IP')
+ssh_key_path = os.getenv('SSH_KEY_PATH')
+postgres_user = os.getenv('POSTGRES_USER')
+db_name = os.getenv('DB_NAME')
+
+# Backup PostgreSQL on the first EC2 instance
+def backup_database():
+    print("Backing up the database...")
+    backup_command = f"pg_dump -U {postgres_user} -h localhost {db_name} > backup.sql"
+    subprocess.run(backup_command, shell=True)
+    print("Backup completed.")
+
+# Transfer the backup to the second EC2 instance
+def transfer_backup():
+    print("Transferring backup to the second EC2 instance...")
+    scp_command = f"scp -i {ssh_key_path} backup.sql ubuntu@{second_ec2_ip}:/home/ubuntu/"
+    subprocess.run(scp_command, shell=True)
+    print("Backup transferred.")
+
+# Restore the backup on the second EC2 instance
+def restore_database():
+    print("Restoring the backup on the second EC2 instance...")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        print(f"Attempting to connect to {host} with key {key_file}")
-        ssh.connect(host, username=username, key_filename=key_file)
-        stdin, stdout, stderr = ssh.exec_command(command)
-        print(stdout.read().decode())
-        error = stderr.read().decode()
-        if error:
-            print(f"Error: {error}")
-    except Exception as e:
-        print(f"Failed to connect: {e}")
-    finally:
-        ssh.close()
-
-def backup_db(source_host, key_file):
-    backup_command = 'pg_dump -U postgres -d mydb -F c -f /tmp/mydb_backup.dump'
-    ssh_execute_command(source_host, 'ubuntu', key_file, backup_command)
-
-def transfer_backup(source_host, dest_host, key_file):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(second_ec2_ip, username="ubuntu", key_filename=ssh_key_path)
     
-    # Kaynak host'a bağlanarak yedek dosyasını alın
-    try:
-        ssh.connect(source_host, username='ubuntu', key_filename=key_file)
-        sftp = ssh.open_sftp()
-        sftp.get('/tmp/mydb_backup.dump', '/tmp/mydb_backup.dump')
-        sftp.close()
-    except Exception as e:
-        print(f"Error during SFTP from source: {e}")
-    finally:
-        ssh.close()
-
-    # Hedef host'a bağlanarak yedek dosyasını yükleyin
-    try:
-        ssh.connect(dest_host, username='ubuntu', key_filename=key_file)
-        sftp = ssh.open_sftp()
-        sftp.put('/tmp/mydb_backup.dump', '/tmp/mydb_backup.dump')
-        sftp.close()
-    except Exception as e:
-        print(f"Error during SFTP to destination: {e}")
-    finally:
-        ssh.close()
-
-def restore_db(dest_host, key_file):
-    restore_command = 'pg_restore -U postgres -d mydb -c /tmp/mydb_backup.dump'
-    ssh_execute_command(dest_host, 'ubuntu', key_file, restore_command)
+    restore_command = f"psql -U {postgres_user} -d {db_name} -f /home/ubuntu/backup.sql"
+    stdin, stdout, stderr = ssh.exec_command(restore_command)
+    print(stdout.read().decode())
+    print(stderr.read().decode())
+    ssh.close()
 
 if __name__ == "__main__":
-    source_host = os.environ['SOURCE_HOST']
-    dest_host = os.environ['DEST_HOST']
-    key_file = '/tmp/my_private_key.pem'  # Use the path where the key is stored in the workflow
-    
-    backup_db(source_host, key_file)
-    transfer_backup(source_host, dest_host, key_file)
-    restore_db(dest_host, key_file)
+    backup_database()
+    transfer_backup()
+    restore_database()
