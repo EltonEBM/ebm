@@ -1,4 +1,4 @@
-name: Yedekleme ve Geri Yükleme
+name: Backup and Restore
 
 on:
   push:
@@ -6,22 +6,22 @@ on:
       - main
 
 jobs:
-  deploy:
+  backup-restore:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Kodu Çek
-        uses: actions/checkout@v3
-
-      - name: Yedekleme ve geri yükleme betiğini çalıştır
-        run: |
-          # Özel anahtarı bir dosyaya yaz
-          echo "$EC2_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem  # Anahtar dosyasının izinlerini güvenli hale getir
-
-          # Python betiğini çalıştır
-          python backup_restore.py
-        env:
-          SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
-          DEST_HOST: ${{ secrets.DEST_HOST }}
-          EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}  # GitHub Secret'ı burada kullanılıyor
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Create private key file
+      run: |
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > public-key.pem
+        chmod 600 public-key.pem  # Set permissions for the private key
+    
+    - name: Run Python backup and restore script
+      run: |
+        python backup_restore.py
+      env:
+        SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
+        DEST_HOST: ${{ secrets.DEST_HOST }}
+        EC2_PRIVATE_KEY: public-key.pem  # Referencing the private key you uploaded to GitHub Secrets
