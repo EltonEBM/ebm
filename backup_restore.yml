@@ -20,7 +20,12 @@ jobs:
 
     - name: Install dependencies
       run: pip install paramiko
-
+    
+    - name: Set up SSH key for EC2 connection
+      run: |
+     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/private_key.pem
+    chmod 600 ~/.ssh/private_key.pem
+    
     - name: Run database sync script
       run: |
         python db_sync.py
