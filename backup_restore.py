@@ -38,7 +38,7 @@ def restore_db(dest_host, key_file):
 if __name__ == "__main__":
     source_host = '3.87.138.109'  # Source EC2 IP
     dest_host = '34.229.252.228'  # Destination EC2 IP
-    key_file = 'EC2_PRIVATE_KEY'  # Path to your private key
+    key_file = 'public-pey.pem'  # Path to your private key
 
     backup_db(source_host, key_file)
     transfer_backup(source_host, dest_host, key_file)
