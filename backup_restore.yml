@@ -27,6 +27,6 @@ jobs:
       env:
         SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
         DEST_HOST: ${{ secrets.DEST_HOST }}
-        KEY_FILE_PATH: ${{ secrets.KEY_FILE_PATH }}
+        KEY_FILE_PATH: ${{ secrets.EC2_PRIVATE_KEY }}
       run: |
         python backup_restore.py
