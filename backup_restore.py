@@ -33,9 +33,9 @@ def restore_db(dest_host, key_file):
     ssh_execute_command(dest_host, 'ubuntu', key_file, restore_command)
 
 if __name__ == "__main__":
-    source_host = 'source_ec2_ip'
-    dest_host = 'destination_ec2_ip'
-    key_file = '/path/to/private-key.pem'
+    source_host = '3.87.138.109'
+    dest_host = '34.229.252.228'
+    key_file = '/Users/eltonmaharramov/Downloads/public-key.pem'
 
     backup_db(source_host, key_file)
     transfer_backup(source_host, dest_host, key_file)
