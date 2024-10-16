@@ -27,6 +27,9 @@ jobs:
       env:
         SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
         DEST_HOST: ${{ secrets.DEST_HOST }}
-        KEY_FILE_PATH: ${{ secrets.KEY_FILE_PATH }}
+        KEY_FILE_PATH: ${{ secrets.KEY_FILE_PATH }}  # Ensure this contains the path to the private key on GitHub Secrets
       run: |
+        # Ensure that the key file is correctly copied and available to the script
+        echo "${{ secrets.KEY_FILE_PATH }}" > /tmp/my_private_key.pem
+        chmod 600 /tmp/my_private_key.pem  # Make the key file secure
         python backup_restore.py
