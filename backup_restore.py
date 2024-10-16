@@ -17,14 +17,14 @@ def transfer_backup(source_host, dest_host, key_file):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
-    # Connect to the source host to get the backup file
+    # Kaynak host'a bağlanarak yedek dosyasını alın
     ssh.connect(source_host, username='ubuntu', key_filename=key_file)
     sftp = ssh.open_sftp()
     sftp.get('/tmp/mydb_backup.dump', '/tmp/mydb_backup.dump')
     sftp.close()
     ssh.close()
 
-    # Connect to the destination host to transfer the backup file
+    # Hedef host'a bağlanarak yedek dosyasını yükleyin
     ssh.connect(dest_host, username='ubuntu', key_filename=key_file)
     sftp = ssh.open_sftp()
     sftp.put('/tmp/mydb_backup.dump', '/tmp/mydb_backup.dump')
@@ -36,9 +36,9 @@ def restore_db(dest_host, key_file):
     ssh_execute_command(dest_host, 'ubuntu', key_file, restore_command)
 
 if __name__ == "__main__":
-    source_host = '3.87.138.109'  # Source EC2 IP
-    dest_host = '34.229.252.228'  # Destination EC2 IP
-    key_file = 'public-pey.pem'  # Path to your private key
+    source_host = os.environ['SOURCE_HOST']
+    dest_host = os.environ['DEST_HOST']
+    key_file = 'private_key.pem'  # GitHub Actions iş akışında yazılan private key dosyası
 
     backup_db(source_host, key_file)
     transfer_backup(source_host, dest_host, key_file)
