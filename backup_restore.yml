@@ -1,4 +1,4 @@
-name: Backup and Restore PostgreSQL
+name: Sync PostgreSQL Database
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  backup-restore:
+  sync_db:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,17 +19,14 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install paramiko
+      run: pip install paramiko
 
-    - name: Run backup and restore script
-      env:
-        SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
-        DEST_HOST: ${{ secrets.DEST_HOST }}
-        KEY_FILE_PATH: ${{ secrets.KEY_FILE_PATH }}  # Ensure this contains the path to the private key on GitHub Secrets
+    - name: Run database sync script
       run: |
-        # Ensure that the key file is correctly copied and available to the script
-        echo "${{ secrets.KEY_FILE_PATH }}" > /tmp/public-key.pem
-        chmod 600 /tmp/public-key.pem  # Make the key file secure
-        python backup_restore.py
+        python db_sync.py
+      env:
+        FIRST_EC2_IP: ${{ secrets.FIRST_EC2_IP }}
+        SECOND_EC2_IP: ${{ secrets.SECOND_EC2_IP }}
+        SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        DB_NAME: ${{ secrets.DB_NAME }}
