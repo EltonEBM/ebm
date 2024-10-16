@@ -54,7 +54,7 @@ def restore_db(dest_host, key_file):
 if __name__ == "__main__":
     source_host = os.environ['SOURCE_HOST']
     dest_host = os.environ['DEST_HOST']
-    key_file = 'public-key.pem'  # This is the key file created in the GitHub Actions workflow
+    key_file = '/tmp/my_private_key.pem'  # Use the path where the key is stored in the workflow
     
     backup_db(source_host, key_file)
     transfer_backup(source_host, dest_host, key_file)
