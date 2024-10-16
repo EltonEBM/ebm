@@ -19,12 +19,15 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install paramiko
-    
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+        pip install paramiko
+
     - name: Set up SSH key for EC2 connection
       run: |
-     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/private_key.pem
-    chmod 600 ~/.ssh/private_key.pem
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/public-key.pem
+        chmod 600 ~/.ssh/public-key.pem
     
     - name: Run database sync script
       run: |
@@ -32,6 +35,7 @@ jobs:
       env:
         FIRST_EC2_IP: ${{ secrets.FIRST_EC2_IP }}
         SECOND_EC2_IP: ${{ secrets.SECOND_EC2_IP }}
-        SSH_KEY_PATH: ${{ secrets.SSH_KEY_PATH }}
+        SSH_KEY_PATH: ~/.ssh/public-key.pem
         POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         DB_NAME: ${{ secrets.DB_NAME }}
