@@ -1,4 +1,4 @@
-name: Backup and Restore
+name: Backup and Restore PostgreSQL
 
 on:
   push:
@@ -8,20 +8,25 @@ on:
 jobs:
   backup-restore:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
-    
-    - name: Create private key file
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
       run: |
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > public-key.pem
-        chmod 600 public-key.pem  # Set permissions for the private key
-    
-    - name: Run Python backup and restore script
-      run: |
-        python backup_restore.py
+        python -m pip install --upgrade pip
+        pip install paramiko
+
+    - name: Run backup and restore script
       env:
         SOURCE_HOST: ${{ secrets.SOURCE_HOST }}
         DEST_HOST: ${{ secrets.DEST_HOST }}
-        EC2_PRIVATE_KEY: public-key.pem  # Referencing the private key you uploaded to GitHub Secrets
+        KEY_FILE_PATH: ${{ secrets.KEY_FILE_PATH }}
+      run: |
+        python backup_restore.py
